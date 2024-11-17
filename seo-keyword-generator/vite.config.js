@@ -1,26 +1,9 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
   build: {
-    outDir: 'dist',
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
-      }
-    },
-    chunkSizeWarningLimit: 1000
+    outDir: 'dist', // Ensure the build output is in the `dist` folder
   },
-  server: {
-    port: 3000,
-    strictPort: true
-  }
-})
+});
