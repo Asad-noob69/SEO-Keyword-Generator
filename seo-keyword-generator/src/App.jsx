@@ -1,5 +1,5 @@
 import KeywordGenerator from './components/KeywordGenerator';
-import Footer from './components/ui//Footer';
+import Footer from './components/ui/Footer';
 
 
 function App() {
