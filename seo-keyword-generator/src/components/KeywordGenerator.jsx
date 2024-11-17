@@ -10,9 +10,9 @@ const KeywordGenerator = () => {
   const [keywords, setKeywords] = useState([]);
   const [displayedKeywords, setDisplayedKeywords] = useState([]);
   const [usedKeywords, setUsedKeywords] = useState(new Set());
-  const [filterType, setFilterType] = useState("default"); // Default filter type
+  const [filterType, setFilterType] = useState("default");
 
-  // Keyword modifiers
+  // Original modifiers plus organized categories
   const modifiers = {
     prefix: [
       "best", "top", "cheap", "affordable", "premium", "professional", "ultimate", "easy", "quick", "simple",
@@ -29,7 +29,7 @@ const KeywordGenerator = () => {
       "webinars", "events", "meetups", "workshops", "conferences", "summits", "webcasts", "podcasts", "articles"
     ],
     questions: [
-      "how to", "what is" 
+      "how to", "what is"
     ],
     related: [
       "vs", "alternatives", "comparison", "reviews", "similar", "related", "opposing", "counterparts", "substitutes",
@@ -38,7 +38,21 @@ const KeywordGenerator = () => {
       "perspectives", "views", "angles", "factors", "elements", "components", "features", "benefits", "drawbacks", "pros",
       "cons", "considerations"
     ],
+    // Additional organized categories
+    commercial: [
+      "buy", "price", "cost", "cheap", "affordable", "premium", "discount", "deal", "offer", "sale",
+      "purchase", "shop", "store", "marketplace", "wholesale", "retail", "subscription", "package"
+    ],
+    informational: [
+      "guide", "tutorial", "learn", "basics", "introduction", "understanding", "explained", "101", 
+      "fundamentals", "overview", "complete guide", "step by step", "beginners guide"
+    ],
+    location: [
+      "near me", "local", "online", "remote", "worldwide", "national", "regional", "city", 
+      "domestic", "international", "global", "nationwide"
+    ]
   };
+
   // Shuffle an array
   const shuffleArray = (array) => {
     const shuffled = [...array];
@@ -49,34 +63,38 @@ const KeywordGenerator = () => {
     return shuffled;
   };
 
+  // Prepare base keyword
+  const prepareBaseKeyword = (keyword) => {
+    return keyword.toLowerCase().trim();
+  };
+
   // Generate keywords
   const generateKeywords = () => {
     if (!baseKeyword.trim()) return;
 
-    const newKeywords = [];
-    const shuffledModifiers = {
-      prefix: shuffleArray(modifiers.prefix),
-      suffix: shuffleArray(modifiers.suffix),
-      questions: shuffleArray(modifiers.questions),
-      related: shuffleArray(modifiers.related),
-    };
+    const prepared = prepareBaseKeyword(baseKeyword);
+    const newKeywords = new Set();
+    
+    // Generate from all modifier categories
+    Object.keys(modifiers).forEach(category => {
+      const categoryModifiers = shuffleArray(modifiers[category]);
+      
+      categoryModifiers.forEach(modifier => {
+        // For prefix-style modifiers
+        if (["prefix", "questions", "commercial", "informational"].includes(category)) {
+          newKeywords.add(`${modifier} ${prepared}`);
+        }
+        // For suffix-style modifiers
+        if (["suffix", "related", "location"].includes(category)) {
+          newKeywords.add(`${prepared} ${modifier}`);
+        }
+      });
+    });
 
-    // Generate keyword variations
-    shuffledModifiers.prefix.forEach((prefix) =>
-      newKeywords.push(`${prefix} ${baseKeyword}`)
-    );
-    shuffledModifiers.suffix.forEach((suffix) =>
-      newKeywords.push(`${baseKeyword} ${suffix}`)
-    );
-    shuffledModifiers.questions.forEach((question) =>
-      newKeywords.push(`${question} ${baseKeyword}`)
-    );
-    shuffledModifiers.related.forEach((related) =>
-      newKeywords.push(`${baseKeyword} ${related}`)
-    );
-
-    setKeywords(shuffleArray(newKeywords)); // Shuffle the list
-    shuffleDisplayedKeywords(newKeywords);
+    // Convert to array and shuffle
+    const finalKeywords = shuffleArray(Array.from(newKeywords));
+    setKeywords(finalKeywords);
+    shuffleDisplayedKeywords(finalKeywords);
   };
 
   const shuffleDisplayedKeywords = (newKeywords) => {
@@ -98,25 +116,23 @@ const KeywordGenerator = () => {
           key={index}
           variant="secondary"
           className="text-sm py-1 px-2 cursor-pointer hover:bg-gray-900"
-          onClick={() =>
-            navigator.clipboard.writeText(`#${keyword.replace(/\s+/g, "")}`)
-          }
+          onClick={() => navigator.clipboard.writeText(`#${keyword.replace(/\s+/g, "")}`)}
         >
           #{keyword.replace(/\s+/g, "")}
         </Badge>
       ));
-    } else if (filterType === "default") {
-      return displayedKeywords.map((keyword, index) => (
-        <Badge
-          key={index}
-          variant="secondary"
-          className="text-sm py-1 px-2 cursor-pointer hover:bg-gray-900"
-          onClick={() => navigator.clipboard.writeText(keyword)}
-        >
-          {keyword}
-        </Badge>
-      ));
     }
+    
+    return displayedKeywords.map((keyword, index) => (
+      <Badge
+        key={index}
+        variant="secondary"
+        className="text-sm py-1 px-2 cursor-pointer hover:bg-gray-900"
+        onClick={() => navigator.clipboard.writeText(keyword)}
+      >
+        {keyword}
+      </Badge>
+    ));
   };
 
   return (
@@ -139,7 +155,6 @@ const KeywordGenerator = () => {
             </Button>
           </div>
 
-          {/* Dropdown for filter options */}
           <div className="flex justify-end">
             <select
               value={filterType}
@@ -148,7 +163,6 @@ const KeywordGenerator = () => {
             >
               <option value="default">Default</option>
               <option value="hashtags">Hashtags</option>
-
             </select>
           </div>
 
@@ -161,7 +175,7 @@ const KeywordGenerator = () => {
 
           {displayedKeywords.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Displayed Keywords:</h3>
+              <h3 className="text-lg font-semibold">Suggested Keywords:</h3>
               <div className="flex flex-wrap gap-2">{renderKeywords()}</div>
               <p className="text-sm text-yellow-100">
                 Click on any keyword to copy to clipboard
